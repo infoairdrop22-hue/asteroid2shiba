@@ -3,265 +3,382 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Asteroid2Shiba - Mining</title>
+    <title>Asteroid2Shiba - Mine & Earn</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        
         :root {
-            --gelap: #0f172a; --hijau: #10b981; --ungu: #8b5cf6;
-            --biru-cerah: #22d3ee; --putih: #f8fafc; --abu: #94a3b8; --merah: #ef4444;
+            --gelap: #0b1020;
+            --gelap-lembut: #151b30;
+            --biru-terang: #22d3ee;
+            --biru: #3b82f6;
+            --ungu: #8b5cf6;
+            --emas: #fbbf24;
+            --putih: #ffffff;
+            --abu: #94a3b8;
+            --hijau: #10b981;
+            --merah: #ef4444;
         }
         
         body {
-            background: linear-gradient(180deg, var(--gelap) 0%, #1e293b 100%);
+            background: linear-gradient(180deg, var(--gelap) 0%, #050714 100%);
             color: var(--putih);
             min-height: 100vh;
-            padding: 20px 15px;
+            padding: 20px 15px 80px;
             overflow-x: hidden;
+            position: relative;
         }
-        .container { max-width: 420px; margin: 0 auto; position: relative; }
 
-        /* === TOMBOL MENU & SIDEBAR === */
-        .tombol-menu {
-            position: fixed; top: 20px; right: 20px; z-index: 100;
-            width: 48px; height: 48px; border: none; border-radius: 12px;
-            background: rgba(16,185,129,0.15); color: var(--hijau); font-size: 24px;
-            cursor: pointer; border: 1px solid rgba(16,185,129,0.3);
+        /* Latar belakang bintang & logo */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(circle at 80% 10%, rgba(59,130,246,0.15) 0%, transparent 50%),
+                              radial-gradient(circle at 20% 90%, rgba(139,92,246,0.1) 0%, transparent 50%);
+            z-index: 0; pointer-events: none;
         }
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); z-index: 90; opacity: 0; visibility: hidden;
-            transition: all 0.3s ease;
+        .logo-latar {
+            position: fixed; bottom: -50px; right: -50px; width: 250px; height: 250px;
+            background-image: url('https://i.imgur.com/9XkZ7Lq.png');
+            background-size: contain; background-repeat: no-repeat;
+            opacity: 0.08; z-index: 0; pointer-events: none;
         }
-        .overlay.aktif { opacity: 1; visibility: visible; }
-        .menu-samping {
-            position: fixed; top: 0; right: -300px; width: 280px; height: 100%;
-            background: linear-gradient(180deg, #1e293b, var(--gelap)); z-index: 95;
-            padding: 20px 15px; border-left: 1px solid rgba(139,92,246,0.2);
-            transition: right 0.3s ease; overflow-y: auto;
-        }
-        .menu-samping.buka { right: 0; }
-        .nama-user {
-            background: rgba(34,211,238,0.1); border-radius: 16px; padding: 12px;
-            text-align: center; font-size: 22px; font-weight: bold; color: var(--biru-cerah);
-            margin-bottom: 25px; border: 1px solid rgba(34,211,238,0.3);
-        }
-        .daftar-menu { list-style: none; }
-        .item-menu { margin-bottom: 10px; }
-        .link-menu {
+
+        .container { max-width: 420px; margin: 0 auto; position: relative; z-index: 1; }
+
+        /* === HEADER === */
+        .header {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 14px 16px; border-radius: 12px; color: var(--ungu);
-            text-decoration: none; font-size: 17px; font-weight: 500;
-            border: 1px solid transparent; transition: all 0.2s;
+            margin-bottom: 25px;
         }
-        .link-menu:hover, .link-menu.aktif {
-            background: rgba(16,185,129,0.15); border-color: var(--hijau); color: var(--hijau);
-        }
-        .label-baru {
-            background: var(--biru-cerah); color: var(--gelap); padding: 2px 8px; border-radius: 6px;
-            font-size: 12px; font-weight: bold;
-        }
-        .tombol-keluar {
-            width: 100%; padding: 14px; margin-top: 20px;
-            background: rgba(239,68,68,0.15); color: var(--merah);
-            border: 1px solid rgba(239,68,68,0.3); border-radius: 12px;
-            font-size: 17px; font-weight: bold; cursor: pointer; transition: 0.2s;
-        }
-        .tombol-keluar:hover { background: rgba(239,68,68,0.25); }
+        .profil-kecil { display: flex; align-items: center; gap: 10px; }
+        .logo-kecil { width: 40px; height: 40px; border-radius: 50%;
+            background-image: url('https://i.imgur.com/9XkZ7Lq.png'); background-size: cover; }
+        .nama-proyek { font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
+        .verifikasi { background: var(--biru); padding: 1px 6px; border-radius: 10px; font-size: 10px; }
+        .judul-utama { font-size: 36px; font-weight: 900; text-align: center; margin: 10px 0 5px;
+            background: linear-gradient(90deg, var(--biru-terang), var(--ungu)); -webkit-background-clip: text; color: transparent; }
+        .sub-judul { text-align: center; color: var(--abu); font-size: 15px; margin-bottom: 25px; }
 
-        /* === KONTEN UTAMA === */
-        .konten-utama { transition: transform 0.3s ease; }
-        .konten-utama.geser { transform: translateX(-280px); }
-
-        .salam {
-            background: rgba(16,185,129,0.1); border-radius: 20px; padding: 12px 20px;
-            text-align: center; font-size: 20px; font-weight: 600; margin-bottom: 15px;
-            border: 1px solid rgba(16,185,129,0.3); color: var(--biru-cerah);
-        }
-        .kartu-saldo {
-            background: rgba(139,92,246,0.1); border-radius: 20px; padding: 20px;
-            text-align: center; margin-bottom: 20px; border: 1px solid rgba(139,92,246,0.3);
-        }
-        .label-total { font-size: 16px; color: var(--abu); margin-bottom: 5px; }
-        .total-saldo { font-size: 42px; font-weight: bold; margin: 8px 0; }
-        .simbol-koin { color: var(--biru-cerah); margin-left: 8px; }
-        .estimasi { font-size: 15px; color: var(--abu); }
+        /* === KARTU SALDO === */
+        .grid-saldo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
+        .kartu-saldo { background: rgba(21,27,48,0.8); border-radius: 16px; padding: 15px; border: 1px solid rgba(59,130,246,0.2); }
+        .label-saldo { font-size: 13px; color: var(--abu); margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+        .nilai-saldo { font-size: 24px; font-weight: bold; margin-bottom: 3px; }
+        .keterangan-saldo { font-size: 12px; color: var(--abu); }
 
         /* === AREA MINING === */
-        .area-mining {
-            background: rgba(16,185,129,0.08); border-radius: 24px; padding: 30px 20px;
-            text-align: center; margin-bottom: 20px; border: 2px solid rgba(16,185,129,0.4);
-            position: relative; overflow: hidden;
+        .kartu-mining {
+            background: rgba(21,27,48,0.8); border-radius: 20px; padding: 25px 20px;
+            border: 1px solid rgba(59,130,246,0.3); margin-bottom: 20px;
+            text-align: center;
         }
-        .ikon-mining {
-            width: 120px; height: 120px; margin: 0 auto 15px; position: relative;
+        .waktu-mining { font-size: 48px; font-weight: bold; margin: 10px 0; }
+        .label-mining { font-size: 14px; color: var(--abu); margin-bottom: 15px; }
+        .bar-progres { width: 100%; height: 10px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+        .isi-bar { height: 100%; width: 52%; background: linear-gradient(90deg, var(--biru), var(--ungu)); border-radius: 10px; }
+        .tombol-mining {
+            width: 100%; padding: 14px; border-radius: 14px; border: none; font-size: 17px; font-weight: bold;
+            cursor: pointer; transition: 0.2s; margin-bottom: 10px;
         }
-        .lingkaran-progres {
-            width: 100%; height: 100%; border-radius: 50%;
-            border: 6px solid rgba(16,185,129,0.2);
-            border-top-color: var(--hijau); animation: putar 2s linear infinite;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .ikon-petir { font-size: 48px; color: var(--hijau); animation: kedip 1.5s infinite; }
-        @keyframes putar { 100% { transform: rotate(360deg); } }
-        @keyframes kedip { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+        .tombol-mulai { background: var(--biru); color: var(--putih); }
+        .tombol-klaim { background: var(--hijau); color: var(--putih); }
+        .tombol-mining:disabled { background: var(--abu); cursor: not-allowed; opacity: 0.7; }
+        .info-hadiah { font-size: 14px; color: var(--emas); margin-top: 5px; }
 
-        .status-mining { font-size: 20px; color: var(--hijau); font-weight: 600; margin-bottom: 10px; }
-        .waktu-mundur { font-size: 48px; font-weight: bold; margin: 15px 0; }
-        .label-waktu { font-size: 18px; color: var(--ungu); margin-bottom: 20px; }
-        .target {
-            background: rgba(16,185,129,0.15); border-radius: 16px; padding: 15px;
-            font-size: 22px; font-weight: 600; color: var(--hijau);
+        /* === ABSEN HARIAN === */
+        .kartu-absen {
+            background: rgba(21,27,48,0.8); border-radius: 20px; padding: 20px;
+            border: 1px solid rgba(139,92,246,0.3); margin-bottom: 25px;
         }
+        .judul-absen { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .hari-absen { font-size: 15px; color: var(--abu); }
+        .grid-hari { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; margin-bottom: 15px; }
+        .kotak-hari { aspect-ratio: 1; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
+        .sudah { background: var(--hijau); color: var(--putih); }
+        .hari-ini { background: var(--ungu); color: var(--putih); border: 2px solid var(--putih); }
+        .belum { background: rgba(255,255,255,0.1); color: var(--abu); }
+        .tombol-absen { width: 100%; padding: 12px; border-radius: 12px; border: none; background: var(--ungu); color: var(--putih); font-weight: bold; cursor: pointer; }
 
-        /* === TOMBOL IKLAN === */
-        .tombol-iklan {
-            width: 100%; padding: 14px; margin-bottom: 20px;
-            background: rgba(34,211,238,0.1); border: 1px solid var(--biru-cerah);
-            border-radius: 14px; color: var(--biru-cerah); font-size: 16px; font-weight: 600;
-            cursor: pointer; transition: 0.2s;
+        /* === PENGUMUMAN === */
+        .kartu-pengumuman {
+            background: rgba(21,27,48,0.8); border-radius: 16px; padding: 15px;
+            border: 1px solid rgba(255,255,255,0.1); margin-bottom: 25px;
+            display: flex; align-items: center; justify-content: space-between;
         }
-        .tombol-iklan:hover { background: rgba(34,211,238,0.2); }
+        .teks-pengumuman { font-size: 15px; color: var(--abu); }
 
-        /* === KARTU STATISTIK === */
-        .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .kartu-stat {
-            background: rgba(255,255,255,0.05); border-radius: 16px; padding: 18px 15px;
-            border: 1px solid rgba(255,255,255,0.1);
+        /* === MENU BAWAH === */
+        .menu-bawah {
+            position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(11,16,32,0.95);
+            border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-around;
+            padding: 12px 0; z-index: 100;
         }
-        .label-stat { font-size: 16px; color: var(--abu); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-        .nilai-stat { font-size: 26px; font-weight: bold; margin-bottom: 4px; }
-        .keterangan-stat { font-size: 13px; color: var(--ungu); }
-        .bar-level {
-            width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-top: 8px; overflow: hidden;
-        }
-        .isi-bar { height: 100%; width: 53%; background: var(--hijau); border-radius: 10px; }
+        .item-menu-bawah { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: var(--abu); cursor: pointer; transition: 0.2s; }
+        .item-menu-bawah.aktif { color: var(--biru); }
+        .ikon-menu { font-size: 20px; }
+
+        /* === HALAMAN LAIN (Sembunyi awal) === */
+        .halaman { display: none; }
+        .halaman.aktif { display: block; }
+        .judul-halaman { font-size: 24px; font-weight: bold; margin-bottom: 20px; }
+        .daftar-tugas { display: flex; flex-direction: column; gap: 12px; }
+        .item-tugas { background: rgba(21,27,48,0.8); border-radius: 12px; padding: 15px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255,255,255,0.1); }
+        .tombol-klaim-tugas { padding: 8px 15px; border-radius: 8px; border: none; background: var(--biru); color: var(--putih); font-size: 13px; font-weight: 600; cursor: pointer; }
+        .tombol-selesai { background: var(--abu); }
     </style>
 </head>
 <body>
+    <div class="logo-latar"></div>
     <div class="container">
-        <!-- Tombol Menu -->
-        <button class="tombol-menu" id="btnMenu">☰</button>
+        <!-- HALAMAN BERANDA -->
+        <div class="halaman aktif" id="beranda">
+            <div class="header">
+                <div class="profil-kecil">
+                    <div class="logo-kecil"></div>
+                    <div class="nama-proyek">Asteroid2Shiba <span class="verifikasi">✓</span></div>
+                </div>
+                <span style="font-size:22px;">🔔</span>
+            </div>
+            <h1 class="judul-utama">ATS2</h1>
+            <p class="sub-judul">Mine • Earn • Grow</p>
 
-        <!-- Latar Gelap -->
-        <div class="overlay" id="overlay"></div>
-
-        <!-- Menu Samping -->
-        <div class="menu-samping" id="sidebar">
-            <div class="nama-user">Asteroid2Shiba</div>
-            <ul class="daftar-menu">
-                <li class="item-menu"><a href="#" class="link-menu">Profil</a></li>
-                <li class="item-menu"><a href="#" class="link-menu">Dompet</a></li>
-                <li class="item-menu"><a href="#" class="link-menu">Peningkatan 🚀</a></li>
-                <li class="item-menu"><a href="#" class="link-menu">Lotere <span class="label-baru">BARU</span></a></li>
-                <li class="item-menu"><a href="#" class="link-menu">Games <span class="label-baru">BARU</span></a></li>
-                <li class="item-menu"><a href="#" class="link-menu">Tugas</a></li>
-                <li class="item-menu"><a href="#" class="link-menu">Bonus Sponsor <span class="label-baru">BARU</span></a></li>
-                <li class="item-menu"><a href="#" class="link-menu aktif">Pengumuman</a></li>
-                <li class="item-menu"><a href="#" class="link-menu">Acara</a></li>
-                <li class="item-menu"><a href="#" class="link-menu">Pemindai</a></li>
-                <li class="item-menu"><a href="#" class="link-menu">Verifikasi Akun</a></li>
-                <li class="item-menu"><a href="#" class="link-menu">Dokumen Proyek</a></li>
-                <li class="item-menu"><a href="#" class="link-menu">Kebijakan Privasi</a></li>
-                <li class="item-menu"><a href="#" class="link-menu">Pengaturan</a></li>
-            </ul>
-            <button class="tombol-keluar">🚪 Keluar</button>
-        </div>
-
-        <!-- Konten Utama -->
-        <div class="konten-utama" id="kontenUtama">
-            <div class="salam">Selamat datang, 🇮🇹 Pengguna!</div>
-
-            <!-- Kartu Saldo -->
-            <div class="kartu-saldo">
-                <p class="label-total">Total</p>
-                <div class="total-saldo">5294.88 <span class="simbol-koin">AST2</span></div>
-                <p class="estimasi">≈ $9.80 USD</p>
+            <div class="grid-saldo">
+                <div class="kartu-saldo">
+                    <p class="label-saldo">💰 ATS2 COIN</p>
+                    <p class="nilai-saldo">1.250</p>
+                    <p class="keterangan-saldo">≈ $12,50 USD</p>
+                </div>
+                <div class="kartu-saldo">
+                    <p class="label-saldo">⭐ TOTAL POIN</p>
+                    <p class="nilai-saldo">12.500</p>
+                    <p class="keterangan-saldo">*1.000 POIN = 100 ATS2</p>
+                </div>
             </div>
 
-            <!-- Area Mining -->
-            <div class="area-mining">
-                <div class="ikon-mining">
-                    <div class="lingkaran-progres">
-                        <span class="ikon-petir">⚡</span>
+            <div class="kartu-mining">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <span style="font-size:16px; font-weight:600;">MINING ⓘ</span>
+                    <span style="font-size:13px; color:var(--emas);">Hadiah: 1.000 POIN</span>
+                </div>
+                <div class="waktu-mining" id="timerMining">03:12:45</div>
+                <p class="label-mining">Mining akan selesai dalam</p>
+                <div class="bar-progres"><div class="isi-bar"></div></div>
+                <button class="tombol-mining tombol-mulai" id="btnMining">▶ MULAI MINING</button>
+                <button class="tombol-mining tombol-klaim" id="btnKlaim" disabled>✅ KLAIM 1.000 POIN</button>
+            </div>
+
+            <div class="kartu-absen">
+                <div class="judul-absen">
+                    <div>
+                        <h3>ABSEN HARIAN</h3>
+                        <p class="hari-absen">Hari ke-7 / 30 • Hadiah hari ini: 400 POIN</p>
                     </div>
                 </div>
-                <p class="status-mining">Aktif</p>
-                <div class="waktu-mundur" id="timer">23:52:50</div>
-                <p class="label-waktu">Waktu Tersisa</p>
-                <div class="target">Target: 72.00 AST2</div>
+                <div class="grid-hari">
+                    <div class="kotak-hari sudah">1<br>100</div>
+                    <div class="kotak-hari sudah">2<br>150</div>
+                    <div class="kotak-hari sudah">3<br>200</div>
+                    <div class="kotak-hari sudah">4<br>250</div>
+                    <div class="kotak-hari sudah">5<br>300</div>
+                    <div class="kotak-hari sudah">6<br>350</div>
+                    <div class="kotak-hari hari-ini">7<br>400</div>
+                    <div class="kotak-hari belum">8<br>450</div>
+                    <div class="kotak-hari belum">9<br>500</div>
+                    <div class="kotak-hari belum">10<br>550</div>
+                </div>
+                <button class="tombol-absen" id="btnAbsen">✅ SUDAH ABSEN</button>
             </div>
 
-            <!-- Tombol Iklan -->
-            <button class="tombol-iklan">📺 Tonton Iklan +%20 (1/10)</button>
+            <div class="kartu-pengumuman">
+                <span>📢 Selamat datang di Asteroid2Shiba! Tambang poin, selesaikan tugas, dan dapatkan koin ATS2.</span>
+                <span>›</span>
+            </div>
+        </div>
 
-            <!-- Statistik -->
-            <div class="grid-stats">
-                <div class="kartu-stat">
-                    <p class="label-stat">📈 Tingkat</p>
-                    <p class="nilai-stat">3.00</p>
-                    <p class="keterangan-stat">AST2 / jam</p>
+        <!-- HALAMAN DOMPET -->
+        <div class="halaman" id="dompet">
+            <h2 class="judul-halaman">DOMPEL</h2>
+            <div class="kartu-saldo" style="margin-bottom:15px;">
+                <p class="label-saldo">💰 ATS2 COIN</p>
+                <p class="nilai-saldo">1.250</p>
+                <p class="keterangan-saldo">≈ $12,50 USD</p>
+            </div>
+            <div class="kartu-saldo" style="margin-bottom:20px;">
+                <p class="label-saldo">⭐ TOTAL POIN</p>
+                <p class="nilai-saldo">12.500</p>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+                <div class="kartu-saldo"><p style="font-size:13px; color:var(--abu);">Hadiah Mining</p><p style="font-weight:bold;">10.000</p></div>
+                <div class="kartu-saldo"><p style="font-size:13px; color:var(--abu);">Hadiah Absen</p><p style="font-weight:bold;">2.100</p></div>
+                <div class="kartu-saldo"><p style="font-size:13px; color:var(--abu);">Hadiah Undangan</p><p style="font-weight:bold;">300</p></div>
+                <div class="kartu-saldo"><p style="font-size:13px; color:var(--abu);">Hadiah Tugas</p><p style="font-weight:bold;">100</p></div>
+            </div>
+            <button style="width:100%; padding:14px; border-radius:12px; border:none; background:var(--biru); color:white; font-weight:bold; font-size:16px;">🔄 KONVERSI POIN KE ATS2</button>
+        </div>
+
+        <!-- HALAMAN TUGAS -->
+        <div class="halaman" id="tugas">
+            <h2 class="judul-halaman">TUGAS</h2>
+            <div class="daftar-tugas">
+                <div class="item-tugas">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span>📢</span>
+                        <div><p>Ikut Saluran Telegram</p><p style="font-size:12px; color:var(--abu);">+100 POIN</p></div>
+                    </div>
+                    <button class="tombol-klaim-tugas">KLAIM</button>
                 </div>
-                <div class="kartu-stat">
-                    <p class="label-stat">🏅 Level</p>
-                    <p class="nilai-stat">8</p>
-                    <div class="bar-level"><div class="isi-bar"></div></div>
-                    <p class="keterangan-stat">53/60 Hari</p>
+                <div class="item-tugas">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span>𝕏</span>
+                        <div><p>Ikuti Akun X (Twitter)</p><p style="font-size:12px; color:var(--abu);">+100 POIN</p></div>
+                    </div>
+                    <button class="tombol-klaim-tugas">KLAIM</button>
                 </div>
-                <div class="kartu-stat">
-                    <p class="label-stat">👥 Referral</p>
-                    <p class="nilai-stat">0/0</p>
-                    <p class="keterangan-stat">Undangan</p>
+                <div class="item-tugas">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span>📸</span>
+                        <div><p>Ikuti Instagram</p><p style="font-size:12px; color:var(--abu);">+100 POIN</p></div>
+                    </div>
+                    <button class="tombol-klaim-tugas">KLAIM</button>
                 </div>
-                <div class="kartu-stat">
-                    <p class="label-stat">⏰ Bonus Harian</p>
-                    <p class="nilai-stat">✅</p>
-                    <p class="keterangan-stat">Sudah Diambil</p>
+                <div class="item-tugas">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span>📺</span>
+                        <div><p>Berlangganan YouTube</p><p style="font-size:12px; color:var(--abu);">+150 POIN</p></div>
+                    </div>
+                    <button class="tombol-klaim-tugas">KERJAKAN</button>
                 </div>
+                <div class="item-tugas">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span>👥</span>
+                        <div><p>Undang 3 Teman</p><p style="font-size:12px; color:var(--abu);">+300 POIN</p></div>
+                    </div>
+                    <button class="tombol-klaim-tugas">KERJAKAN</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- HALAMAN UNDANGAN -->
+        <div class="halaman" id="undang">
+            <h2 class="judul-halaman">UNDANGAN TEMAN</h2>
+            <div class="kartu-saldo" style="margin-bottom:15px;">
+                <p style="font-size:14px; color:var(--abu);">Kode Undangan Kamu</p>
+                <p style="font-size:20px; font-weight:bold; margin:5px 0;">ATS2-ABCD1234</p>
+                <p style="font-size:12px; color:var(--abu);">https://t.me/asteroid2shiba_bot?start=ref_1234</p>
+            </div>
+            <button style="width:100%; padding:14px; border-radius:12px; border:none; background:var(--biru); color:white; font-weight:bold; font-size:16px; margin-bottom:20px;">🔗 BAGIKAN TAUTAN</button>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+                <div class="kartu-saldo"><p style="font-size:13px; color:var(--abu);">Total Undangan</p><p style="font-weight:bold; font-size:24px;">25 Orang</p></div>
+                <div class="kartu-saldo"><p style="font-size:13px; color:var(--abu);">Total Hadiah</p><p style="font-weight:bold; font-size:24px;">12.500 POIN</p></div>
+            </div>
+        </div>
+
+        <!-- HALAMAN PROFIL -->
+        <div class="halaman" id="profil">
+            <h2 class="judul-halaman">PROFIL</h2>
+            <div class="kartu-saldo" style="text-align:center; margin-bottom:20px;">
+                <div class="logo-kecil" style="width:70px; height:70px; margin:0 auto 10px;"></div>
+                <h3 style="font-size:20px;">Keneng</h3>
+                <p style="font-size:13px; color:var(--abu);">@Keneng_aco • UID: 1234567890</p>
+                <span style="display:inline-block; background:var(--emas); color:black; padding:2px 10px; border-radius:10px; font-size:12px; font-weight:bold; margin-top:8px;">BRONZE</span>
+            </div>
+            <div class="daftar-tugas">
+                <div class="item-tugas"><span>💰 Total Koin</span><span style="font-weight:bold;">1.250 ATS2</span></div>
+                <div class="item-tugas"><span>⭐ Total Poin</span><span style="font-weight:bold;">12.500 POIN</span></div>
+                <div class="item-tugas"><span>📅 Tanggal Bergabung</span><span style="font-weight:bold;">29 Juli 2026</span></div>
             </div>
         </div>
     </div>
 
+    <!-- MENU NAVIGASI BAWAH -->
+    <div class="menu-bawah">
+        <div class="item-menu-bawah aktif" data-halaman="beranda">
+            <span class="ikon-menu">🏠</span>
+            <span>Beranda</span>
+        </div>
+        <div class="item-menu-bawah" data-halaman="dompet">
+            <span class="ikon-menu">💳</span>
+            <span>Dompet</span>
+        </div>
+        <div class="item-menu-bawah" data-halaman="tugas">
+            <span class="ikon-menu">✅</span>
+            <span>Tugas</span>
+        </div>
+        <div class="item-menu-bawah" data-halaman="undang">
+            <span class="ikon-menu">👥</span>
+            <span>Undang</span>
+        </div>
+        <div class="item-menu-bawah" data-halaman="profil">
+            <span class="ikon-menu">👤</span>
+            <span>Profil</span>
+        </div>
+    </div>
+
     <script>
-        // Bisa berjalan di Web & Telegram
+        // Inisialisasi Telegram Mini App
         if(window.Telegram?.WebApp) {
             const tg = window.Telegram.WebApp;
             tg.ready();
             tg.expand();
-            tg.setHeaderColor('#0f172a');
+            tg.setHeaderColor('#0b1020');
         }
 
-        // Fungsi Buka/Tutup Menu
-        const btnMenu = document.getElementById('btnMenu');
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
-        const kontenUtama = document.getElementById('kontenUtama');
-
-        btnMenu.addEventListener('click', () => {
-            sidebar.classList.toggle('buka');
-            overlay.classList.toggle('aktif');
-            kontenUtama.classList.toggle('geser');
-        });
-        overlay.addEventListener('click', () => {
-            sidebar.classList.remove('buka');
-            overlay.classList.remove('aktif');
-            kontenUtama.classList.remove('geser');
+        // Navigasi Halaman
+        const itemMenu = document.querySelectorAll('.item-menu-bawah');
+        const halaman = document.querySelectorAll('.halaman');
+        itemMenu.forEach(item => {
+            item.addEventListener('click', () => {
+                const target = item.dataset.halaman;
+                // Hapus aktif semua
+                itemMenu.forEach(i => i.classList.remove('aktif'));
+                halaman.forEach(h => h.classList.remove('aktif'));
+                // Tambah aktif yang dipilih
+                item.classList.add('aktif');
+                document.getElementById(target).classList.add('aktif');
+            });
         });
 
-        // Hitung Mundur Waktu Mining
-        let waktu = 23 * 3600 + 52 * 60 + 50;
-        const elemenTimer = document.getElementById('timer');
-        setInterval(() => {
-            if(waktu > 0) {
-                waktu--;
-                const jam = Math.floor(waktu / 3600).toString().padStart(2,'0');
-                const menit = Math.floor((waktu % 3600)/60).toString().padStart(2,'0');
-                const detik = (waktu % 60).toString().padStart(2,'0');
-                elemenTimer.textContent = `${jam}:${menit}:${detik}`;
-            } else {
-                elemenTimer.textContent = "Selesai!";
-            }
-        }, 1000);
+        // SISTEM MINING
+        const btnMining = document.getElementById('btnMining');
+        const btnKlaim = document.getElementById('btnKlaim');
+        const timerMining = document.getElementById('timerMining');
+        let waktuSisa = 3 * 3600 + 12 * 60 + 45;
+        let sedangBerjalan = false;
+        let interval;
+
+        btnMining.addEventListener('click', () => {
+            if(sedangBerjalan) return;
+            sedangBerjalan = true;
+            btnMining.disabled = true;
+            btnMining.textContent = "⏳ SEDANG BERJALAN...";
+
+            interval = setInterval(() => {
+                if(waktuSisa > 0) {
+                    waktuSisa--;
+                    const jam = Math.floor(waktuSisa / 3600).toString().padStart(2,'0');
+                    const menit = Math.floor((waktuSisa % 3600)/60).toString().padStart(2,'0');
+                    const detik = (waktuSisa % 60).toString().padStart(2,'0');
+                    timerMining.textContent = `${jam}:${menit}:${detik}`;
+                } else {
+                    clearInterval(interval);
+                    btnKlaim.disabled = false;
+                    btnMining.textContent = "SELESAI!";
+                    sedangBerjalan = false;
+                }
+            }, 1000);
+        });
+
+        btnKlaim.addEventListener('click', () => {
+            alert("Berhasil klaim 1.000 POIN!");
+            btnKlaim.disabled = true;
+            waktuSisa = 3 * 3600 + 12 * 60 + 45;
+            btnMining.disabled = false;
+            btnMining.textContent = "▶ MULAI MINING";
+            timerMining.textContent = "03:12:45";
+        });
     </script>
 </body>
 </html>
